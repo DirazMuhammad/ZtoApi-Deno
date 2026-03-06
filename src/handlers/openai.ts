@@ -120,7 +120,12 @@ export async function handleChatCompletions(request: Request): Promise<Response>
   // Get authentication token
   let authToken: string;
   try {
-    authToken = await getAnonymousToken();
+    const zaiToken = Deno.env.get("ZAI_TOKEN") || Deno.env.get("ZAI_TOKENS")?.split(",")[0];
+    if (zaiToken) {
+      authToken = zaiToken;
+    } else {
+      authToken = await getAnonymousToken();
+    }
   } catch (error) {
     debugLog("Failed to get anonymous token: %v", error);
     return new Response("Failed to get authentication token", {
@@ -128,7 +133,7 @@ export async function handleChatCompletions(request: Request): Promise<Response>
       headers,
     });
   }
-
+  
   // Process messages
   let processedMessages: Message[];
   try {
