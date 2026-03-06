@@ -8,7 +8,7 @@ import { getModelConfig } from "../config/models.ts";
 import { addLiveRequest, recordRequestStats } from "../utils/stats.ts";
 import { setCORSHeaders } from "../utils/helpers.ts";
 import { processMessages, validateTools } from "../utils/validation.ts";
-import { getAnonymousToken } from "../services/anonymous-token.ts";
+import { TokenPool } from "../services/tokenPool.ts";
 import { callUpstreamWithHeaders } from "../services/upstream-caller.ts";
 import { collectFullResponse, processUpstreamStream } from "../utils/stream.ts";
 
@@ -120,9 +120,10 @@ export async function handleChatCompletions(request: Request): Promise<Response>
   // Get authentication token
   let authToken: string;
   try {
-    authToken = await getAnonymousToken();
+    const pool = new TokenPool();
+    authToken = await pool.getToken();
   } catch (error) {
-    debugLog("Failed to get anonymous token: %v", error);
+    debugLog("Failed to get token: %v", error);
     return new Response("Failed to get authentication token", {
       status: 500,
       headers,
